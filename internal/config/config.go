@@ -8,15 +8,23 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env-default:"local"`
-	StoragePath string `yaml:"storage_path env-required:"true"`
+	Env string `yaml:"env" env-default:"local"`
 	HttpServer
+	Database
 }
 
 type HttpServer struct {
 	Address     string        `yaml:"address" env-default:"localhost:8080"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
+}
+
+type Database struct {
+	User     string `yaml:"user" env-default:"postgres"`
+	Password string `yaml:"password" env-default:"Abdrahman"`
+	DBname   string `yaml:"dbname" env-default:"gowebsocket"`
+	Hostname string `yaml:"hostname" env-default:"localhost"`
+	Port     int    `yaml:"port" env-default:"5432"`
 }
 
 func MustLoad() Config {
