@@ -5,8 +5,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
+	"net/http"
 	"new-websocket-chat/internal/config"
+	"new-websocket-chat/internal/http_server/handlers/user/save"
 	mwLogger "new-websocket-chat/internal/http_server/middleware/logger"
+	"new-websocket-chat/internal/lib/logger/sl"
+	"new-websocket-chat/internal/storage/postgres"
 	"os"
 )
 
@@ -17,24 +21,19 @@ const (
 )
 
 func main() {
-	// TODO: init config: cleanenv
 	cfg := config.MustLoad()
-
 	fmt.Println(cfg)
 
-	// TODO: init logger: slog
 	log := setupLogger(cfg.Env)
 	log.Info("starting url-shortener", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
 
-	// TODO: init storage: postgresql // sqlite ???
-	//storage, err := postgres.New(cfg.User, cfg.Password, cfg.DBname, cfg.Hostname, cfg.Port)
-	//if err != nil {
-	//	log.Error("failed to init storage", sl.Err(err))
-	//	os.Exit(1)
-	//}
-	//_ = storage
-	// TODO: init router: chi, "chi render"
+	storage, err := postgres.New(cfg.User, cfg.Password, cfg.DBname, cfg.Hostname, cfg.Port)
+	if err != nil {
+		log.Error("failed to init storage", sl.Err(err))
+		os.Exit(1)
+	}
+	_ = storage
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -43,11 +42,25 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
+	router.Post("/user", save.New(log, storage))
+
 	// middleware (цепочка хендлеров выполняется, есть основной и остальные, вроде обработки авторизации или модификации, должен быть middleware проверяющий авторизацию при изменении URLа)
 
-	// TODO: init server:
+	log.Info("starting server", slog.String("address", cfg.Address))
 
-	fmt.Println("main is operating")
+	srv := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.HttpServer.Timeout,
+		WriteTimeout: cfg.HttpServer.Timeout,
+		IdleTimeout:  cfg.HttpServer.IdleTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server")
+	}
+
+	log.Error("server stopped") // we shouldn't reach this point
 }
 
 func setupLogger(env string) *slog.Logger {
