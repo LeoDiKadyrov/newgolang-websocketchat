@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"new-websocket-chat/internal/config"
+	"new-websocket-chat/internal/http_server/handlers/user/delete"
 	"new-websocket-chat/internal/http_server/handlers/user/save"
 	mwLogger "new-websocket-chat/internal/http_server/middleware/logger"
 	"new-websocket-chat/internal/lib/logger/sl"
@@ -43,7 +44,7 @@ func main() {
 	router.Use(middleware.URLFormat)
 
 	router.Post("/user", save.New(log, storage))
-	//router.Delete("/user/delete", delete.New(log, storage)) TODO:
+	router.Delete("/user/delete", delete.New(log, storage))
 
 	// middleware (цепочка хендлеров выполняется, есть основной и остальные, вроде обработки авторизации или модификации, должен быть middleware проверяющий авторизацию при изменении URLа)
 
