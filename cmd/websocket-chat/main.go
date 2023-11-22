@@ -25,7 +25,7 @@ func main() {
 	fmt.Println(cfg)
 
 	log := setupLogger(cfg.Env)
-	log.Info("starting url-shortener", slog.String("env", cfg.Env))
+	log.Info("starting websocket-chat", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
 
 	storage, err := postgres.New(cfg.User, cfg.Password, cfg.DBname, cfg.Hostname, cfg.Port)
@@ -43,6 +43,7 @@ func main() {
 	router.Use(middleware.URLFormat)
 
 	router.Post("/user", save.New(log, storage))
+	//router.Delete("/user/delete", delete.New(log, storage)) TODO:
 
 	// middleware (цепочка хендлеров выполняется, есть основной и остальные, вроде обработки авторизации или модификации, должен быть middleware проверяющий авторизацию при изменении URLа)
 
