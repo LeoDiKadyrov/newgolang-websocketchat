@@ -54,16 +54,16 @@ func New(user string, password string, dbname string, hostname string, port int)
 	return &Storage{db: db}, nil
 }
 
-func (s *Storage) SaveUser(username string, email string, password_hash string) (int64, error) {
+func (s *Storage) SaveUser(username string, email string, password string) (int64, error) {
 	const op = "storage.postgres.SaveUser"
 
 	var lastInsertId int64 = 0
-	stmt, err := s.db.Prepare(`INSERT INTO users(username, email, password_hash) VALUES($1, $2, $3) RETURNING id`)
+	stmt, err := s.db.Prepare(`INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING id`)
 	if err != nil {
 		return 0, fmt.Errorf("%s: prepare statement: %w", op, err)
 	}
 
-	err = stmt.QueryRow(username, email, password_hash).Scan(&lastInsertId)
+	err = stmt.QueryRow(username, email, password).Scan(&lastInsertId)
 	if err != nil {
 		if postgresErr, ok := err.(*pq.Error); ok && postgresErr.Code == "23505" { // 23505 unique constraint error code - if user already exists
 			return 0, fmt.Errorf("%s: %w", op, storage.ErrUserExists)
