@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	resp "new-websocket-chat/internal/lib/api/response"
+	"new-websocket-chat/internal/lib/encryption"
 	"new-websocket-chat/internal/lib/logger/sl"
 	"new-websocket-chat/internal/storage"
 )
@@ -16,7 +17,7 @@ import (
 type Request struct {
 	Username string `json:"username" validate:"required,min=4,max=24"`
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=20,containsany=!@#?"` // validation, will it return error if password empty or rules don't apply???
+	Password string `json:"password" validate:"required,min=8,max=24,containsany=!@#?"`
 }
 
 type Response struct {
@@ -70,7 +71,16 @@ func New(log *slog.Logger, userSaver UserSaver) http.HandlerFunc {
 			return
 		}
 
-		id, err := userSaver.SaveUser(req.Username, req.Email, req.Password) // TODO: add password hashing before saving
+		userPassword, err := encryption.EncryptPassword(req.Password)
+		if err != nil {
+			log.Error("failed to encrypt user password", sl.Err(err))
+
+			render.JSON(w, r, resp.Error("failed to encrypt password"))
+
+			return
+		}
+
+		id, err := userSaver.SaveUser(req.Username, req.Email, userPassword) // TODO: add password hashing before saving
 		if errors.Is(err, storage.ErrUserExists) {
 			log.Info("user already exists", slog.String("user", req.Username))
 

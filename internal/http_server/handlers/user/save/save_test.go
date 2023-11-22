@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
@@ -116,9 +117,9 @@ func TestSaveHandler(t *testing.T) {
 			userSaverMock := mocks.NewUserSaver(t)
 
 			if test.respError == "" || test.mockError != nil {
-				userSaverMock.On("SaveUser", test.username, test.email, test.password).
-					Return(int64(1), test.mockError).
-					Once()
+				userSaverMock.On("SaveUser", test.username, test.email, mock.Anything). // mock.Anything because I encrypt user's password through bcrypt and hash everytime is different
+													Return(int64(1), test.mockError).
+													Once()
 			}
 
 			handler := save.New(slogdiscard.NewDiscardLogger(), userSaverMock)

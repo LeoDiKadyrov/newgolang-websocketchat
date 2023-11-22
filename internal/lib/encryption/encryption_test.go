@@ -49,22 +49,22 @@ func TestNewEncryptedPassword(t *testing.T) {
 		},
 		{
 			name:        "only special symbols",
-			password:    "!@#$%^&*()_+", // 72 is bcrypt limit - should return error
+			password:    "!@#$%^&*()_+",
 			expectError: false,
 		},
 		{
 			name:        "only numbers",
-			password:    "123456789", // 72 is bcrypt limit - should return error
+			password:    "123456789",
 			expectError: false,
 		},
 		{
 			name:        "only numbers and symbols",
-			password:    "!@#$%^&*()_+123456789", // 72 is bcrypt limit - should return error
+			password:    "!@#$%^&*()_+123456789",
 			expectError: false,
 		},
 		{
 			name:        "uppercase only",
-			password:    "ABDRAHMAN", // 72 is bcrypt limit - should return error
+			password:    "ABDRAHMAN",
 			expectError: false,
 		},
 	}
