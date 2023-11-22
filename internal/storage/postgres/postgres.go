@@ -28,7 +28,7 @@ func New(user string, password string, dbname string, hostname string, port int)
 	    id SERIAL PRIMARY KEY,
 	    username CHARACTER VARYING(30) NOT NULL UNIQUE CHECK(username !=''),
 	    email CHARACTER VARYING(30) NOT NULL UNIQUE CHECK(email !=''),
-		password_hash CHARACTER VARYING(30) NOT NULL);
+		password CHARACTER VARYING(100) NOT NULL);
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -116,7 +116,7 @@ func (s *Storage) GetUsername(email string) (string, error) {
 	return resUsername, nil
 }
 
-// TODO:
+// Returns <nil> if user deleted successfully
 func (s *Storage) DeleteUser(username string, email string) error {
 	const op = "storage.postgres.DeleteUser"
 
@@ -125,11 +125,19 @@ func (s *Storage) DeleteUser(username string, email string) error {
 		return fmt.Errorf("%s: prepare statement: %w", op, err)
 	}
 
-	someErr := err
-	err = stmt.QueryRow(username, email).Scan(&someErr)
+	result, err := stmt.Exec(username, email)
 	if err != nil {
 		return fmt.Errorf("%s: execute statement: %w", op, err) // TODO: why error? level=ERROR msg="failed to detele a user" error="storage.postgres.DeleteUser: execute statement: sql: no rows in result set"
 	}
 
-	return someErr
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%s: gettins rows affected: %w", op, err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("%s: no rows affected: %w", op, err)
+	}
+
+	return nil
 }

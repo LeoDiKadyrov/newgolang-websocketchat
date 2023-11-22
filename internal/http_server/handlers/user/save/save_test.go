@@ -136,11 +136,11 @@ func TestSaveHandler(t *testing.T) {
 
 			body := rr.Body.String()
 
-			var respa save.Response
+			var resp save.Response
 
-			require.NoError(t, json.Unmarshal([]byte(body), &respa))
+			require.NoError(t, json.Unmarshal([]byte(body), &resp))
 
-			require.Equal(t, test.respError, respa.Error)
+			require.Equal(t, test.respError, resp.Error)
 		})
 	}
 }

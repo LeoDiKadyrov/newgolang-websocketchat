@@ -40,7 +40,6 @@ func New(log *slog.Logger, userSaver UserSaver) http.HandlerFunc {
 		)
 
 		var req Request
-		log.Info("r.Body is following", slog.Any("req", req))
 
 		err := render.DecodeJSON(r.Body, &req)
 		if errors.Is(err, io.EOF) {
