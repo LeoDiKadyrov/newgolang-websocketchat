@@ -53,6 +53,7 @@ func main() {
 	//})
 
 	// 1. JWT auth
+	// 1.1 JWT unit testing (for generating token, validating token, etc)
 	// 2. Functional testing on saving and deleting
 	// 3. Websocket messaging
 
