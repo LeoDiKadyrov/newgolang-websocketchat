@@ -10,6 +10,7 @@ import (
 	"net/http"
 	resp "new-websocket-chat/internal/lib/api/response"
 	"new-websocket-chat/internal/lib/encryption"
+	jwtAuth "new-websocket-chat/internal/lib/jwt"
 	"new-websocket-chat/internal/lib/logger/sl"
 	"new-websocket-chat/internal/storage"
 )
@@ -22,7 +23,9 @@ type Request struct {
 
 type Response struct {
 	resp.Response
-	Username string `json:"username,omitempty"`
+	Username        string `json:"username,omitempty"`
+	JWTAccessToken  string `json:"jwtAccessToken"`
+	JWTRefreshToken string `json:"jwtRefreshToken"`
 }
 
 //go:generate go run github.com/vektra/mockery/v2@v2.37.1 --name=UserSaver
@@ -96,13 +99,25 @@ func New(log *slog.Logger, userSaver UserSaver) http.HandlerFunc {
 		}
 
 		log.Info("user saved into db", slog.Int64("id", id))
-		responseOK(w, r, req.Username)
+
+		jwtUserAccessToken, jwtUserRefreshToken, err := jwtAuth.GenerateTokens(id)
+		if err != nil {
+			log.Error("failed to generate json web token for user id", sl.Err(err))
+
+			render.JSON(w, r, resp.Error("failed to generate jwt token"))
+
+			return
+		}
+
+		responseOK(w, r, req.Username, jwtUserAccessToken, jwtUserRefreshToken)
 	}
 }
 
-func responseOK(w http.ResponseWriter, r *http.Request, username string) {
+func responseOK(w http.ResponseWriter, r *http.Request, username string, jwtUserAccessToken string, jwtUserRefreshToken string) {
 	render.JSON(w, r, Response{
-		Response: resp.OK(),
-		Username: username,
+		Response:        resp.OK(),
+		Username:        username,
+		JWTAccessToken:  jwtUserAccessToken,
+		JWTRefreshToken: jwtUserRefreshToken,
 	})
 }

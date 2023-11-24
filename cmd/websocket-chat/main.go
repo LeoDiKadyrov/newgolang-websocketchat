@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"new-websocket-chat/internal/config"
+	refresh "new-websocket-chat/internal/http_server/handlers/jwt"
 	"new-websocket-chat/internal/http_server/handlers/user/delete"
 	"new-websocket-chat/internal/http_server/handlers/user/save"
 	mwLogger "new-websocket-chat/internal/http_server/middleware/logger"
@@ -44,7 +45,16 @@ func main() {
 	router.Use(middleware.URLFormat)
 
 	router.Post("/user", save.New(log, storage))
+	router.Post("/api/jwt/refresh", refresh.New(log))
 	router.Delete("/user/delete", delete.New(log, storage))
+	//router.Group(func(r chi.Router) {
+	//	r.Use(jwtAuth.TokenAuthMiddleware)
+	//	// r.Get("/Auth", auth.New(log, storage))
+	//})
+
+	// 1. JWT auth
+	// 2. Functional testing on saving and deleting
+	// 3. Websocket messaging
 
 	// middleware (цепочка хендлеров выполняется, есть основной и остальные, вроде обработки авторизации или модификации, должен быть middleware проверяющий авторизацию при изменении URLа)
 
