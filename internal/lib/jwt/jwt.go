@@ -10,6 +10,20 @@ import (
 	"time"
 )
 
+type JWTAuthService struct{}
+
+func (s *JWTAuthService) ExtractToken(r *http.Request) (string, error) {
+	return ExtractToken(r)
+}
+
+func (s *JWTAuthService) ValidateToken(tokenString string) (*jwt.StandardClaims, error) {
+	return ValidateToken(tokenString)
+}
+
+func (s *JWTAuthService) GenerateTokens(userID int64) (string, string, error) {
+	return GenerateTokens(userID)
+}
+
 func GenerateTokens(userID int64) (accessTokenString string, refreshTokenString string, err error) {
 	const op = "lib.jwt.GenerateToken"
 
