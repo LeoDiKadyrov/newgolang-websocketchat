@@ -11,6 +11,7 @@ import (
 	"new-websocket-chat/internal/http_server/handlers/user/delete"
 	"new-websocket-chat/internal/http_server/handlers/user/save"
 	mwLogger "new-websocket-chat/internal/http_server/middleware/logger"
+	jwtAuth "new-websocket-chat/internal/lib/jwt"
 	"new-websocket-chat/internal/lib/logger/sl"
 	"new-websocket-chat/internal/storage/postgres"
 	"os"
@@ -44,8 +45,10 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
+	jwtAuthService := &jwtAuth.JWTAuthService{}
+
 	router.Post("/user", save.New(log, storage))
-	router.Post("/api/jwt/refresh", refresh.New(log))
+	router.Post("/api/jwt/refresh", refresh.New(log, jwtAuthService))
 	router.Delete("/user/delete", delete.New(log, storage))
 	//router.Group(func(r chi.Router) {
 	//	r.Use(jwtAuth.TokenAuthMiddleware)
