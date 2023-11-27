@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func GenerateTokens(userId int64) (accessTokenString string, refreshTokenString string, err error) {
+func GenerateTokens(userID int64) (accessTokenString string, refreshTokenString string, err error) {
 	const op = "lib.jwt.GenerateToken"
 
 	jwtIssuer := os.Getenv("JWT_ISSUER")
@@ -20,7 +20,7 @@ func GenerateTokens(userId int64) (accessTokenString string, refreshTokenString 
 		ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
 		IssuedAt:  time.Now().Unix(),
 		Issuer:    jwtIssuer,
-		Subject:   strconv.FormatInt(userId, 10),
+		Subject:   strconv.FormatInt(userID, 10),
 	}
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
@@ -33,7 +33,7 @@ func GenerateTokens(userId int64) (accessTokenString string, refreshTokenString 
 		ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
 		IssuedAt:  time.Now().Unix(),
 		Issuer:    jwtIssuer,
-		Subject:   strconv.FormatInt(userId, 10),
+		Subject:   strconv.FormatInt(userID, 10),
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
 	refreshTokenString, err = refreshToken.SignedString([]byte(jwtSecretKey))
@@ -64,14 +64,14 @@ func ValidateToken(tokenString string) (*jwt.StandardClaims, error) {
 	return nil, fmt.Errorf("%s: invalid token %w", op, err)
 }
 
-func ExtractToken(r *http.Request) string {
+func ExtractToken(r *http.Request) (string, error) {
 	const op = "lib.jwt.ExtractToken"
 
 	bearToken := r.Header.Get("Authorization")
 
 	strArr := strings.Split(bearToken, " ")
 	if len(strArr) == 2 {
-		return strArr[1]
+		return strArr[1], nil
 	}
-	return ""
+	return "", fmt.Errorf("%s: failed to extract token %w", op)
 }

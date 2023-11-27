@@ -1,12 +1,12 @@
 package refresh
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
 	resp "new-websocket-chat/internal/lib/api/response"
-	jwtAuth "new-websocket-chat/internal/lib/jwt"
 	"new-websocket-chat/internal/lib/logger/sl"
 	"strconv"
 )
@@ -17,7 +17,14 @@ type Response struct {
 	JWTRefreshToken string `json:"jwtRefreshToken"`
 }
 
-func New(log *slog.Logger) http.HandlerFunc {
+//go:generate go run github.com/vektra/mockery/v2@v2.37.1 --name=TokenService
+type TokenService interface {
+	ExtractToken(r *http.Request) (string, error)
+	ValidateToken(tokenString string) (*jwt.StandardClaims, error)
+	GenerateTokens(userID int64) (accessTokenString string, refreshTokenString string, err error)
+}
+
+func New(log *slog.Logger, tokenService TokenService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.jwt.refresh.New"
 
@@ -26,12 +33,20 @@ func New(log *slog.Logger) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		refreshToken := jwtAuth.ExtractToken(r)
+		refreshToken, err := tokenService.ExtractToken(r)
+		if err != nil {
+			log.Error("Failed to extract token from request", sl.Err(err))
+
+			render.JSON(w, r, resp.Error("Failed to extract token"))
+
+			return
+		}
+
 		log.Info("refreshToken extracted", slog.String("refreshToken", refreshToken))
 
-		claims, err := jwtAuth.ValidateToken(refreshToken)
+		claims, err := tokenService.ValidateToken(refreshToken)
 		if err != nil {
-			log.Error("Invalid refresh token", http.StatusUnauthorized)
+			log.Error("Invalid refresh token", sl.Err(err))
 
 			render.JSON(w, r, resp.Error("Invalid refresh token"))
 
@@ -50,15 +65,16 @@ func New(log *slog.Logger) http.HandlerFunc {
 		}
 		log.Info("userID parsed from string to int64", slog.Int64("userID", userID))
 
-		newAccessToken, newRefreshToken, err := jwtAuth.GenerateTokens(userID)
+		newAccessToken, newRefreshToken, err := tokenService.GenerateTokens(userID)
 		if err != nil {
-			log.Error("Failed to generate new access token", http.StatusInternalServerError)
+			log.Error("Failed to generate new access token", sl.Err(err))
 
 			render.JSON(w, r, resp.Error("Failed to generate new access token"))
 
 			return
 		}
-		log.Info("new access token generated", slog.String("newAccessToken", newAccessToken))
+		log.Info("new access token generated", slog.String("newAccessToken", newAccessToken)) // TODO: remove due to security issues
+		log.Info("new refresh token generated", slog.String("newAccessToken", newRefreshToken))
 
 		responseOK(w, r, newAccessToken, newRefreshToken)
 
