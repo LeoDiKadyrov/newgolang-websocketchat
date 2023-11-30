@@ -96,3 +96,8 @@ func responseOK(w http.ResponseWriter, r *http.Request, username string) {
 		Username: username,
 	})
 }
+
+/* Clean code thoughts & questions to myself
+TODO:
+[ ] Validation depends on go-playground/validator/v10 - same comment as in user.save
+*/

@@ -82,7 +82,7 @@ func New(log *slog.Logger, userSaver UserSaver) http.HandlerFunc {
 			return
 		}
 
-		id, err := userSaver.SaveUser(req.Username, req.Email, userPassword) // TODO: add password hashing before saving
+		id, err := userSaver.SaveUser(req.Username, req.Email, userPassword)
 		if errors.Is(err, storage.ErrUserExists) {
 			log.Info("user already exists", slog.String("user", req.Username))
 
@@ -121,3 +121,9 @@ func responseOK(w http.ResponseWriter, r *http.Request, username string, jwtUser
 		JWTRefreshToken: jwtUserRefreshToken,
 	})
 }
+
+/* Clean code thoughts & questions to myself
+TODO:
+[ ] Validation depends on go-playground/validator/v10 - that's an dependency on external library. Shouldn't infrastructure layer provide / implement it?
+[ ] jwtUserAccessToken, jwtUserRefreshToken, err := jwtAuth.GenerateTokens(id) => my func responseOK provides JWT tokens. What if I decide to use different auth method? What if I want to use Oauth and not to use jwt? I'd have to change getting jwt tokens and my responseOK. Is it alright?
+*/

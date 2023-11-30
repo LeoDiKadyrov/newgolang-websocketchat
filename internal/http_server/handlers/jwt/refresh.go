@@ -88,3 +88,8 @@ func responseOK(w http.ResponseWriter, r *http.Request, generatedAccessToken str
 		JWTRefreshToken: generatedRefreshToken,
 	})
 }
+
+/* Clean code thoughts & questions to myself
+TODO:
+[ ] - TokenService has jwt.StandardClaims which points to dependency??? or at least marks that it's a jwt auth implementation. Is it alright? Although refresh handler doesn't know implementation, it does know now that it's about jwts. But that might be alright due to having this package in handlers.jwt.refresh
+*/

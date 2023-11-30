@@ -29,7 +29,7 @@ func New(user string, password string, dbname string, hostname string, port int)
 	    username CHARACTER VARYING(30) NOT NULL UNIQUE CHECK(username !=''),
 	    email CHARACTER VARYING(30) NOT NULL UNIQUE CHECK(email !=''),
 		password CHARACTER VARYING(100) NOT NULL);
-	`)
+	`) // migrations ??? not necessary to create table, think about putting in another file and mark in main that you have migrations first
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -58,7 +58,7 @@ func (s *Storage) SaveUser(username string, email string, password string) (int6
 	const op = "storage.postgres.SaveUser"
 
 	var lastInsertId int64 = 0
-	stmt, err := s.db.Prepare(`INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING id`)
+	stmt, err := s.db.Prepare(`INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING id`) // Is it okay? What if table have different structure? How should it work?
 	if err != nil {
 		return 0, fmt.Errorf("%s: prepare statement: %w", op, err)
 	}
@@ -75,21 +75,21 @@ func (s *Storage) SaveUser(username string, email string, password string) (int6
 	return lastInsertId, nil
 }
 
-func (s *Storage) GetUserEmail(username string) (string, error) {
+func (s *Storage) GetUserEmail(username string) (*string, error) {
 	const op = "storage.postgres.GetUserEmail"
 
 	stmt, err := s.db.Prepare(`SELECT email FROM users WHERE username=$1`)
 	if err != nil {
-		return "", fmt.Errorf("%s: prepare statement: %w", op, err)
+		return nil, fmt.Errorf("%s: prepare statement: %w", op, err)
 	}
 
-	resEmail := ""
+	var resEmail *string
 	err = stmt.QueryRow(username).Scan(&resEmail)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", storage.ErrEmailNotFound
+		return nil, storage.ErrEmailNotFound
 	}
 	if err != nil {
-		return "", fmt.Errorf("%s: execute statement: %w", op, err)
+		return nil, fmt.Errorf("%s: execute statement: %w", op, err)
 	}
 
 	return resEmail, nil

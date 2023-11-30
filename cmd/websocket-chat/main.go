@@ -45,7 +45,7 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	jwtAuthService := &jwtAuth.JWTAuthService{}
+	jwtAuthService := &jwtAuth.JWTAuthService{} // Add error handling if not initialized
 
 	router.Post("/user", save.New(log, storage))
 	router.Post("/api/jwt/refresh", refresh.New(log, jwtAuthService))
