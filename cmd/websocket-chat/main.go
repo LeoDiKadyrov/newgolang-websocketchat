@@ -84,10 +84,6 @@ func main() {
 	log.Error("server stopped") // we shouldn't reach this point
 }
 
-func NewHub() {
-	panic("unimplemented")
-}
-
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
 
