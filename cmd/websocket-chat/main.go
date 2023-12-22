@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
 	"net/http"
 	"new-websocket-chat/internal/config"
@@ -14,7 +11,11 @@ import (
 	jwtAuth "new-websocket-chat/internal/lib/jwt"
 	"new-websocket-chat/internal/lib/logger/sl"
 	"new-websocket-chat/internal/storage/postgres"
+	ws "new-websocket-chat/internal/websocket/handlers"
 	"os"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 const (
@@ -25,8 +26,6 @@ const (
 
 func main() {
 	cfg := config.MustLoad()
-	fmt.Println(cfg)
-
 	log := setupLogger(cfg.Env)
 	log.Info("starting websocket-chat", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
@@ -47,9 +46,15 @@ func main() {
 
 	jwtAuthService := &jwtAuth.JWTAuthService{} // Add error handling if not initialized
 
+	hub := ws.NewHub()
+	go hub.Run()
+
+	log.Info("websocket hub was created", slog.Any("hub: ", hub))
+
 	router.Post("/user", save.New(log, storage))
 	router.Post("/api/jwt/refresh", refresh.New(log, jwtAuthService))
 	router.Delete("/user/delete", delete.New(log, storage))
+	router.HandleFunc("/ws", ws.ServeWs(log, hub))
 	//router.Group(func(r chi.Router) {
 	//	r.Use(jwtAuth.TokenAuthMiddleware)
 	//	// r.Get("/Auth", auth.New(log, storage))
@@ -77,6 +82,10 @@ func main() {
 	}
 
 	log.Error("server stopped") // we shouldn't reach this point
+}
+
+func NewHub() {
+	panic("unimplemented")
 }
 
 func setupLogger(env string) *slog.Logger {
