@@ -9,7 +9,10 @@ import (
 func TokenAuthMiddleware(next http.Handler) http.Handler {
 	const op = "lib.jwt.middleware.TokenAuthMiddleware"
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := jwtAuth.ExtractToken(r)
+		tokenString, err := jwtAuth.ExtractToken(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+		}
 
 		claims, err := jwtAuth.ValidateToken(tokenString)
 		if err != nil {
