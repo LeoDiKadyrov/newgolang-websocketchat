@@ -11,8 +11,9 @@ import (
 	"strconv"
 )
 
+// Response defines the response payload for the user deletion request.
 type Response struct {
-	resp.Response
+	resp.Response // Embedding the common response struct
 	JWTAccessToken  string `json:"jwtAccessToken"`
 	JWTRefreshToken string `json:"jwtRefreshToken"`
 }
@@ -24,6 +25,16 @@ type TokenService interface {
 	GenerateTokens(userID int64) (accessTokenString string, refreshTokenString string, err error)
 }
 
+// @Summary Refresh JWT Tokens
+// @Description Refreshes the JWT access and refresh tokens for a user.
+// @Tags jwt
+// @Accept json
+// @Produce json
+// @Param refreshToken query string true "Refresh Token"
+// @Success 200 {object} refresh.Response "Successfully refreshed JWT tokens"
+// @Failure 400 {string} string "Invalid refresh token"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/jwt/refresh [post]
 func New(log *slog.Logger, tokenService TokenService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.jwt.refresh.New"
@@ -88,8 +99,3 @@ func responseOK(w http.ResponseWriter, r *http.Request, generatedAccessToken str
 		JWTRefreshToken: generatedRefreshToken,
 	})
 }
-
-/* Clean code thoughts & questions to myself
-TODO:
-[ ] - TokenService has jwt.StandardClaims which points to dependency??? or at least marks that it's a jwt auth implementation. Is it alright? Although refresh handler doesn't know implementation, it does know now that it's about jwts. But that might be alright due to having this package in handlers.jwt.refresh
-*/

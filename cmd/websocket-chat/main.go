@@ -1,3 +1,8 @@
+// @title WebSocket Chat API
+// @version 1.0
+// @description This is a sample server for a WebSocket chat application.
+// @host localhost:8080
+// @BasePath /
 package main
 
 import (
@@ -13,8 +18,10 @@ import (
 	"new-websocket-chat/internal/lib/logger/sl"
 	"new-websocket-chat/internal/storage/postgres"
 	ws "new-websocket-chat/internal/websocket/handlers"
+	_ "new-websocket-chat/docs"
 	"os"
 
+	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -52,6 +59,9 @@ func main() {
 
 	log.Info("websocket hub was created", slog.Any("hub: ", hub))
 
+	router.Get("/swagger/*", httpSwagger.Handler(
+        httpSwagger.URL("http://localhost:8080/swagger/doc.json"), // The url pointing to API definition
+    ))
 	router.Post("/user", save.New(log, storage))
 	router.Post("/api/jwt/refresh", refresh.New(log, jwtAuthService))
 	router.Delete("/user/delete", delete.New(log, storage))

@@ -15,17 +15,19 @@ import (
 	"new-websocket-chat/internal/storage"
 )
 
+// Request defines the required information to create a new user.
 type Request struct {
-	Username string `json:"username" validate:"required,min=4,max=24"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=24,containsany=!@#?"`
+	Username string `json:"username" validate:"required,min=4,max=24"` // Username of the user
+	Email    string `json:"email" validate:"required,email"` // Email of the user
+	Password string `json:"password" validate:"required,min=8,max=24,containsany=!@#?"` // Password of the user
 }
 
+// Response defines the response payload for the user creation request.
 type Response struct {
-	resp.Response
-	Username        string `json:"username,omitempty"`
-	JWTAccessToken  string `json:"jwtAccessToken"`
-	JWTRefreshToken string `json:"jwtRefreshToken"`
+	resp.Response // Embedding the common response struct
+	Username        string `json:"username,omitempty"` // Username that was registered
+	JWTAccessToken  string `json:"jwtAccessToken"` // Access JWT token for the user
+	JWTRefreshToken string `json:"jwtRefreshToken"` // Refresh JWT token for the user
 }
 
 //go:generate go run github.com/vektra/mockery/v2@v2.37.1 --name=UserSaver
@@ -33,6 +35,16 @@ type UserSaver interface {
 	SaveUser(username string, email string, password string) (int64, error)
 }
 
+// @Summary Create user
+// @Description Create a new user in the system.
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param request body Request true "User Registration Data"
+// @Success 200 {object} Response "Successfully registered user and generated JWT tokens"
+// @Failure 400 {object} Response "Bad Request with details"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /user [post]
 func New(log *slog.Logger, userSaver UserSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.user.save.New"
@@ -121,9 +133,3 @@ func responseOK(w http.ResponseWriter, r *http.Request, username string, jwtUser
 		JWTRefreshToken: jwtUserRefreshToken,
 	})
 }
-
-/* Clean code thoughts & questions to myself
-TODO:
-[ ] Validation depends on go-playground/validator/v10 - that's an dependency on external library. Shouldn't infrastructure layer provide / implement it?
-[ ] jwtUserAccessToken, jwtUserRefreshToken, err := jwtAuth.GenerateTokens(id) => my func responseOK provides JWT tokens. What if I decide to use different auth method? What if I want to use Oauth and not to use jwt? I'd have to change getting jwt tokens and my responseOK. Is it alright?
-*/

@@ -13,14 +13,16 @@ import (
 	"new-websocket-chat/internal/storage"
 )
 
+// Request defines the required information to delete user.
 type DeleteRequest struct {
-	Username string `json:"username" validate:"required,min=4,max=24"`
-	Email    string `json:"email" validate:"required,email"`
+	Username string `json:"username" validate:"required,min=4,max=24"` // Username of the user
+	Email    string `json:"email" validate:"required,email"` // Email of the user
 }
 
+// Response defines the response payload for the user deletion request.
 type Response struct {
-	resp.Response
-	Username string `json:"username,omitempty"`
+	resp.Response // Embedding the common response struct
+	Username string `json:"username,omitempty"` // Username that was registered
 }
 
 //go:generate go run github.com/vektra/mockery/v2@v2.37.1 --name=UserDeleter
@@ -28,6 +30,17 @@ type UserDeleter interface {
 	DeleteUser(username string, email string) error
 }
 
+// @Summary Delete user
+// @Description Deletes a user from the system.
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param request body delete.DeleteRequest true "User Deletion Data"
+// @Success 200 {object} delete.Response "Successfully deleted user"
+// @Failure 400 {object} Response "Bad Request with details"
+// @Failure 404 {string} string "User not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /user/delete [delete]
 func New(log *slog.Logger, userDeleter UserDeleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.user.delete.new"

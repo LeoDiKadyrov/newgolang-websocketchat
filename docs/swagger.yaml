@@ -1,0 +1,174 @@
+basePath: /
+definitions:
+  internal_http_server_handlers_jwt.Response:
+    properties:
+      error:
+        type: string
+      jwtAccessToken:
+        type: string
+      jwtRefreshToken:
+        type: string
+      status:
+        type: string
+    type: object
+  internal_http_server_handlers_user_delete.DeleteRequest:
+    properties:
+      email:
+        description: Email of the user
+        type: string
+      username:
+        description: Username of the user
+        maxLength: 24
+        minLength: 4
+        type: string
+    required:
+    - email
+    - username
+    type: object
+  internal_http_server_handlers_user_delete.Response:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+      username:
+        description: Username that was registered
+        type: string
+    type: object
+  internal_http_server_handlers_user_save.Request:
+    properties:
+      email:
+        description: Email of the user
+        type: string
+      password:
+        description: Password of the user
+        maxLength: 24
+        minLength: 8
+        type: string
+      username:
+        description: Username of the user
+        maxLength: 24
+        minLength: 4
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  internal_http_server_handlers_user_save.Response:
+    properties:
+      error:
+        type: string
+      jwtAccessToken:
+        description: Access JWT token for the user
+        type: string
+      jwtRefreshToken:
+        description: Refresh JWT token for the user
+        type: string
+      status:
+        type: string
+      username:
+        description: Username that was registered
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample server for a WebSocket chat application.
+  title: WebSocket Chat API
+  version: "1.0"
+paths:
+  /api/jwt/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes the JWT access and refresh tokens for a user.
+      parameters:
+      - description: Refresh Token
+        in: query
+        name: refreshToken
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully refreshed JWT tokens
+          schema:
+            $ref: '#/definitions/internal_http_server_handlers_jwt.Response'
+        "400":
+          description: Invalid refresh token
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Refresh JWT Tokens
+      tags:
+      - jwt
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user in the system.
+      parameters:
+      - description: User Registration Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_http_server_handlers_user_save.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully registered user and generated JWT tokens
+          schema:
+            $ref: '#/definitions/internal_http_server_handlers_user_save.Response'
+        "400":
+          description: Bad Request with details
+          schema:
+            $ref: '#/definitions/internal_http_server_handlers_user_save.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create user
+      tags:
+      - user
+  /user/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a user from the system.
+      parameters:
+      - description: User Deletion Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_http_server_handlers_user_delete.DeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted user
+          schema:
+            $ref: '#/definitions/internal_http_server_handlers_user_delete.Response'
+        "400":
+          description: Bad Request with details
+          schema:
+            $ref: '#/definitions/internal_http_server_handlers_user_delete.Response'
+        "404":
+          description: User not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Delete user
+      tags:
+      - user
+swagger: "2.0"
