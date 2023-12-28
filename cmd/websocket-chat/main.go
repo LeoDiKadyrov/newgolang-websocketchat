@@ -64,13 +64,6 @@ func main() {
 	//	// r.Get("/Auth", auth.New(log, storage))
 	//})
 
-	// 1. JWT auth
-	// 1.1 JWT unit testing (for generating token, validating token, etc.)
-	// 2. Functional testing on saving and deleting
-	// 3. Websocket messaging
-
-	// middleware (цепочка хендлеров выполняется, есть основной и остальные, вроде обработки авторизации или модификации, должен быть middleware проверяющий авторизацию при изменении URLа)
-
 	log.Info("starting server", slog.String("address", cfg.Address))
 
 	srv := &http.Server{
