@@ -145,11 +145,18 @@ func ServeWs(log *slog.Logger, hub *Hub) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 		
+		// Check for JWT token before upgrading
+		userID := r.Context().Value("userID")
+		log.Info("extracted userID in ServeWs", slog.Any("userID", userID))
+		
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Error("Failed to upgrade http connection to websocket", sl.Err(err))
 			return
 		}
+		
+		log.Info("upgraded HTTP connection to Websocket")
+
 		client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 		client.hub.register <- client
 

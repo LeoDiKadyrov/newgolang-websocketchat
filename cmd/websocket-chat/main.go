@@ -8,7 +8,8 @@ import (
 	"new-websocket-chat/internal/http_server/handlers/user/delete"
 	"new-websocket-chat/internal/http_server/handlers/user/save"
 	mwLogger "new-websocket-chat/internal/http_server/middleware/logger"
-	jwtAuth "new-websocket-chat/internal/lib/jwt"
+	jwt "new-websocket-chat/internal/lib/jwt"
+	jwtAuth "new-websocket-chat/internal/lib/jwt/middleware"
 	"new-websocket-chat/internal/lib/logger/sl"
 	"new-websocket-chat/internal/storage/postgres"
 	ws "new-websocket-chat/internal/websocket/handlers"
@@ -44,7 +45,7 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	jwtAuthService := &jwtAuth.JWTAuthService{} // Add error handling if not initialized
+	jwtAuthService := &jwt.JWTAuthService{} // Add error handling if not initialized
 
 	hub := ws.NewHub()
 	go hub.Run()
@@ -54,7 +55,10 @@ func main() {
 	router.Post("/user", save.New(log, storage))
 	router.Post("/api/jwt/refresh", refresh.New(log, jwtAuthService))
 	router.Delete("/user/delete", delete.New(log, storage))
-	router.HandleFunc("/ws", ws.ServeWs(log, hub))
+	router.Group(func(r chi.Router) {
+		r.Use(jwtAuth.TokenAuthMiddleware)
+		r.HandleFunc("/ws", ws.ServeWs(log, hub))
+	})
 	//router.Group(func(r chi.Router) {
 	//	r.Use(jwtAuth.TokenAuthMiddleware)
 	//	// r.Get("/Auth", auth.New(log, storage))

@@ -87,5 +87,13 @@ func ExtractToken(r *http.Request) (string, error) {
 	if len(strArr) == 2 {
 		return strArr[1], nil
 	}
+
+	// if not in the auth header
+	queryParams := r.URL.Query()
+    token := queryParams.Get("token")
+    if token != "" {
+        return token, nil
+    }
+
 	return "", fmt.Errorf("%s: failed to extract token %w", op)
 }
