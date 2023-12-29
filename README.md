@@ -5,11 +5,6 @@ Websocket Chat is a Golang pet project I chose to write to learn Golang. There i
 ### Motivation
 My motivation was to learn how to build anything in Golang. I wanted to learn how to create HTTP server, do some CRUD operations, native auth with JWT, proper logging, config set up, a bit of unit testing, etc. I got the idea of writing exactly Websocket server from Primeagen's New Language Roadmap: **https://www.youtube.com/watch?v=E1H9AFtwxfE**
 
-Next steps would be:
-- Deploy using Docker (Never did that)
-- Set up CI/CD (Never did that either)
-- Do a new pet project that'd actually be more interesting rather than basic exploration of the language.
-
 ## Installation
 
 To run it locally, use:
